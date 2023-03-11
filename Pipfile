@@ -13,6 +13,7 @@ asyncio = "*"
 pyppeteer = "*"
 tkinterweb = "*"
 beautifulsoup4 = "*"
+pyinstaller = "*"
 
 [dev-packages]
 
@@ -22,3 +23,4 @@ python_full_version = "3.10.5"
 
 [scripts]
 app = "pipenv run python src/app.py"
+build = "pyinstaller src/app.py --noconfirm --onedir --noconsole --icon=icon.ico --add-data <path/to/customtkinter>;customtkinter/ --collect-all tkinterweb"

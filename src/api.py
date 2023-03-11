@@ -19,6 +19,9 @@ def selenium_client():
 
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
+    options.add_argument('--disable-logging')
+    options.add_argument('--log-level=3')
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
     options.add_experimental_option('detach', True)
     driver = webdriver.Chrome(options=options)
     cookies = pickle.load(open(COOKIES_PATH, 'rb'))

@@ -112,7 +112,7 @@ class App(ct.CTk):
     def close_window(self):
         if os.path.exists(os.path.join(CACHE_DIR, 'courses.pkl')):
             os.remove(os.path.join(CACHE_DIR, 'courses.pkl'))
-        exit()
+        self.destroy()
 
 
 if __name__ == '__main__':

@@ -52,6 +52,7 @@ class LoginWindow(ct.CTkToplevel):
         self.wait_bar.start()
         res = [None]
         thread = threading.Thread(target=self.login_process, args=(username, password, totp, res))
+        thread.setDaemon(True)
         thread.start()
         self.after_process(res)
 
@@ -59,6 +60,9 @@ class LoginWindow(ct.CTkToplevel):
         self.message.configure(text='ログイン処理中...', text_color=('black', 'white'))
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
+        options.add_argument('--disable-logging')
+        options.add_argument('--log-level=3')
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
         service = Service()
         service.creation_flags = CREATE_NO_WINDOW
         driver = webdriver.Chrome(options=options, service=service)
@@ -110,5 +114,5 @@ class LoginWindow(ct.CTkToplevel):
         self.after(10, self.after_process, res)
 
     def close_window(self):
-        self.master.destroy()
+        self.destroy()
         exit()
