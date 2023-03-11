@@ -44,7 +44,6 @@ class CourseTable(ct.CTkScrollableFrame):
                 courses = get_courses()
             except:
                 print('get courses error')
-        print(courses)
         pickle.dump(courses, open(os.path.join(CACHE_DIR, 'courses.pkl'), 'wb'))
         course_dict = self.classify(courses)
         bar.stop()
@@ -68,7 +67,6 @@ class CourseTable(ct.CTkScrollableFrame):
             })
         for k,v in d.items():
             d[k] = sorted(v, key=lambda x: x['name'])
-        print(d)
         return d
 
     def add_item(self, name, teacher, locale, course_id):
@@ -77,6 +75,8 @@ class CourseTable(ct.CTkScrollableFrame):
         if dbstrlen(name) > MAX_NAME_LEN : name = name[:MAX_NAME_LEN] + '...'
         name_button = ct.CTkButton(outframe, text=name,
                                    font=(ct.CTkFont('MSゴシック'), 16),
+                                   text_color=("gray10", "gray90"),
+                                   text_color_disabled=("gray70", "gray30"),
                                    fg_color='transparent',
                                    hover=False,
                                    anchor='w',

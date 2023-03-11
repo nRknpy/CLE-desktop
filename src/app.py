@@ -2,6 +2,7 @@ import customtkinter as ct
 import os
 from PIL import Image
 import threading
+import pickle
 import unicodedata
 
 from login.login_window import LoginWindow
@@ -10,7 +11,7 @@ from courses.courses import Courses
 from config.config import Config
 
 from utils import isexists_login_info
-from api import check_auth
+from api import check_auth, login_save
 from const import ASSET_DIR, CACHE_DIR
 
 class App(ct.CTk):
@@ -28,7 +29,9 @@ class App(ct.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        self.logo_image = ct.CTkImage(Image.open(os.path.join(ASSET_DIR, 'CLELogo.png')), size=(220, 32))
+        self.logo_image = ct.CTkImage(light_image=Image.open(os.path.join(ASSET_DIR, 'CLELogo_light.png')),
+                                      dark_image=Image.open(os.path.join(ASSET_DIR, 'CLELogo_dark.png')),
+                                      size=(220, 32))
 
         # navigation frame
         self.navigation_frame = ct.CTkFrame(self, corner_radius=0)
@@ -94,16 +97,29 @@ class App(ct.CTk):
         if isexists_login_info():
             if check_auth():
                 return
+        if os.path.exists(os.path.join(CACHE_DIR, 'config.pkl')):
+            config = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
+            if config['userid'] and config['password'] and not config['token']:
+                self.login_window = LoginWindow(self, userid=config['userid'], password=config['password'])
+                self.login_window.mainloop()
+                return
+            if config['userid'] and config['password'] and config['token']:
+                login_save(config['userid'], config['password'], config['token'], input_token=True)
+                return
         self.login_window = LoginWindow(self)
         self.login_window.mainloop()
 
     def close_window(self):
-        # if os.path.exists(os.path.join(CACHE_DIR, 'courses.pkl')):
-        #     os.remove(os.path.join(CACHE_DIR, 'courses.pkl'))
+        if os.path.exists(os.path.join(CACHE_DIR, 'courses.pkl')):
+            os.remove(os.path.join(CACHE_DIR, 'courses.pkl'))
         exit()
 
 
 if __name__ == '__main__':
-    ct.set_appearance_mode("dark")
+    if os.path.exists(os.path.join(CACHE_DIR, 'config.pkl')):
+        config = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
+        if config['darkmode']: ct.set_appearance_mode('dark')
+        else: ct.set_appearance_mode('light')
+    else: ct.set_appearance_mode("light")
     app = App()
     app.mainloop()

@@ -2,12 +2,15 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from subprocess import CREATE_NO_WINDOW
 from bs4 import BeautifulSoup
 import requests
 import pickle
 import os
 from datetime import datetime
 from urllib import parse
+import pyotp
 import copy
 
 from const import CACHE_DIR, COOKIES_PATH
@@ -39,7 +42,6 @@ def requests_client():
 def check_auth():
     session = requests_client()
     res = session.get('https://www.cle.osaka-u.ac.jp/learn/api/v1/users/me?expand=systemRoles,insRoles')
-    print(res)
     if res.status_code == 401:
         return False
     elif res.status_code != 200:
@@ -57,15 +59,13 @@ def get_homeworks():
     date_query = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     query = parse.urlencode({
         'date': date_query,
-        'date_compare': 'lessOrEqual',
-        # 'date_compare': 'greaterOrEqual',
+        # 'date_compare': 'lessOrEqual',
+        'date_compare': 'greaterOrEqual',
         'includeCount': 'true',
         'limit': 50,
         'offset': 0,
     }, safe=':')
-    print(query)
     homeworks = session.get('https://www.cle.osaka-u.ac.jp/learn/api/v1/calendars/dueDateCalendarItems?' + query).json()
-    print(homeworks)
     if homeworks['results']:
         output = homeworks['results']
     else:
@@ -86,8 +86,6 @@ def get_courses():
         course_id = course['courseId']
         course_info = session.get(f'https://www.cle.osaka-u.ac.jp/learn/api/v1/courses/{course_id}').json()
         course_info_list.append(course_info)
-    print(course_info_list)
-    print(len(course_info_list))
     return course_info_list
 
 def get_content_html(course_id):
@@ -117,11 +115,38 @@ def get_content_html(course_id):
     except:
         return True, f'<h4><a href=\"https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}">https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}</a><h4><br><p>現在，このページの表示は実装されていません．リンクから直接確認してください．</p>'
 
-def _get_content_html(url, res):
-    driver = selenium_client()
-    driver.get(url)
-    elem = WebDriverWait(driver, 100).until(
-        EC.presence_of_element_located((By.ID, "content_listContainer"))
-    )
-    html = elem.get_attribute('outerHTML')
-    res.append(html)
+def login_save(userid, password, totp_or_token, input_token=False):
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    service = Service()
+    service.creation_flags = CREATE_NO_WINDOW
+    driver = webdriver.Chrome(options=options, service=service)
+    driver.get("https://www.cle.osaka-u.ac.jp/")
+    driver.find_element(By.XPATH, "//*[@id=\"loginsaml\"]").click()
+    if (len(driver.find_elements(By.XPATH, "//*[@id=\"USER_ID\"]"))):
+        driver.find_element(By.XPATH, "//*[@id=\"USER_ID\"]").send_keys(userid)
+        driver.find_element(By.XPATH, "//*[@id=\"USER_PASSWORD\"]").send_keys(password)
+        driver.find_element(By.XPATH, "/html/body/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr/td[2]/div/input").click()
+    if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
+        driver.quit()
+        return 'info-error'
+    if (len(driver.find_elements(By.XPATH, "//*[@id=\"OTP_CODE\"]"))):
+        totp = totp_or_token
+        if input_token:
+            totp = pyotp.TOTP(totp_or_token).now()
+        driver.find_element(By.XPATH, "//*[@id=\"OTP_CODE\"]").send_keys(totp)
+        driver.find_element(By.XPATH, "//*[@id=\"STORE_OTP_AUTH_RESULT\"]").click()
+        driver.find_element(By.XPATH, "/html/body/form/table/tbody/tr[3]/td/table/tbody/tr[7]/td/div/button").click()
+    if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
+        driver.quit()
+        return 'totp-error'
+    if (len(driver.find_elements(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input"))):
+        driver.find_element(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input").click()
+        driver.find_element(By.XPATH, "//*[@id=\"ok\"]").click()
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    pickle.dump(driver.get_cookies(), open(COOKIES_PATH, 'wb'))
+    driver.quit()
+    user_id = get_userinfo()['id']
+    pickle.dump(user_id, open(os.path.join(CACHE_DIR, 'user-id.pkl'), 'wb'))
+    return 'success'
+

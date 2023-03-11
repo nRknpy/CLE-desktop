@@ -1,5 +1,5 @@
 import customtkinter as ct
-import tkinter
+import tkinter as tk
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -13,7 +13,7 @@ from const import COOKIES_PATH, CACHE_DIR
 from api import get_userinfo
 
 class LoginWindow(ct.CTkToplevel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, userid=None, password=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.geometry("400x400")
         self.resizable(False, False)
@@ -23,9 +23,9 @@ class LoginWindow(ct.CTkToplevel):
         self.grid_rowconfigure(1, weight=1)
 
         self.login_label = ct.CTkLabel(self, text='ログイン', font=(ct.CTkFont('MSゴシック'), 20))
-        self.login_label.place(relx=0.5, rely=0.2, anchor=tkinter.CENTER)
+        self.login_label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
         self.frame = ct.CTkFrame(master=self, width=300, height=300)
-        self.frame.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+        self.frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         self.frame.grid_rowconfigure(5, weight=1)
         self.username_entry = ct.CTkEntry(master=self.frame, placeholder_text='大阪大学個人ID')
         self.username_entry.grid(row=0, column=0, padx=20, pady=5)
@@ -36,7 +36,11 @@ class LoginWindow(ct.CTkToplevel):
         self.message = ct.CTkLabel(self.frame, text='')
         self.message.grid(row=3, column=0, padx=20, pady=5)
         self.login_button = ct.CTkButton(master=self.frame, text='Login', command=self.login_button_click)
+        self.login_button.bind("<Return>", lambda e: self.login_button_click())
         self.login_button.grid(row=4, column=0, padx=20, pady=10)
+        
+        if userid: self.username_entry.insert(tk.END, userid)
+        if password: self.password_entry.insert(tk.END, password)
     
     def login_button_click(self):
         self.login_button.configure(state='disabled')
@@ -70,6 +74,7 @@ class LoginWindow(ct.CTkToplevel):
             return
         if (len(driver.find_elements(By.XPATH, "//*[@id=\"OTP_CODE\"]"))):
             driver.find_element(By.XPATH, "//*[@id=\"OTP_CODE\"]").send_keys(totp)
+            driver.find_element(By.XPATH, "//*[@id=\"STORE_OTP_AUTH_RESULT\"]").click()
             driver.find_element(By.XPATH, "/html/body/form/table/tbody/tr[3]/td/table/tbody/tr[7]/td/div/button").click()
         if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
             res[0] = 'totp-error'

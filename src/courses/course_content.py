@@ -13,8 +13,6 @@ class CourseContent(ct.CTkFrame):
         self.threads_list = threads_list
         self.content = None
 
-        # self.__make_ui()
-
     def make_ui(self, course_id, latest_id):
         if self.content != None:
             self.content.destroy()
@@ -25,7 +23,7 @@ class CourseContent(ct.CTkFrame):
         self.bar.stop()
         self.bar.destroy()
         if latest_id[0] != course_id: return
-        self.content = htmlwidgets.HtmlFrame(self, height=self.winfo_height(), width=self.winfo_width())
+        self.content = htmlwidgets.HtmlFrame(self, height=self.winfo_height(), width=self.winfo_width(), messages_enabled = False)
         self.content.on_link_click(self.load_link)
         self.content.load_html(res)
         self.content.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")

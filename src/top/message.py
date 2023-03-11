@@ -10,7 +10,7 @@ class MassageFrame(ct.CTkFrame):
         super().__init__(master, **kwargs)
         self.threads_list = threads_list
         self.grid_columnconfigure(0, weight=1)
-        self.message = htmlwidgets.HtmlFrame(self)
+        self.message = htmlwidgets.HtmlFrame(self, messages_enabled=False)
         self.message.on_link_click(self.load_link)
 
         self.__make_ui()
@@ -21,7 +21,6 @@ class MassageFrame(ct.CTkFrame):
     def __make_ui(self):
         try:
             message_html = get_message()
-            print(message_html)
         except:
             print('get message error')
         # message = htmlwidgets.HtmlFrame(self, height=self.winfo_height())
