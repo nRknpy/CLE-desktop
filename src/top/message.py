@@ -25,7 +25,7 @@ class MassageFrame(ct.CTkFrame):
             print('get message error')
         # message = htmlwidgets.HtmlFrame(self, height=self.winfo_height())
         # message.on_link_click(self.load_link)
-        credit_html = '<p><strong>【CLE Desktop】</strong></p><br><p>・開発: <a href=\"https://twitter.com/Ra_kn_c\">@Ra_kn_c (Twitter)</a> / バグ・要望等はDMへ</p>'
+        credit_html = '<p><strong>【CLE Desktop】</strong></p><br><p>・開発: <a href=\"https://twitter.com/Ra_kn_c\">@Ra_kn_c (Twitter)</a> / バグ・要望等はDMへ</p><br><p>・github: <a href=\"https://github.com/nRknpy/CLE-desktop.git\">https://github.com/nRknpy/CLE-desktop.git</a> / バグ修正や機能追加があればPRお願いします．</p>'
         self.message.load_html(message_html + credit_html)
         self.message.grid(row=0, column=0, padx=0, pady=0, sticky="ew")
 
