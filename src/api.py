@@ -1,7 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from subprocess import CREATE_NO_WINDOW
 from bs4 import BeautifulSoup
@@ -149,4 +147,3 @@ def login_save(userid, password, totp_or_token, input_token=False):
     user_id = get_userinfo()['id']
     pickle.dump(user_id, open(os.path.join(CACHE_DIR, 'user-id.pkl'), 'wb'))
     return 'success'
-
