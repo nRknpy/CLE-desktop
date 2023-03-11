@@ -6,9 +6,11 @@ from datetime import datetime, timezone, timedelta
 from api import get_homeworks
 
 class Homeworks(ct.CTkScrollableFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, threads_list, **kwargs):
         super().__init__(master, **kwargs)
         self.grid_columnconfigure(0, weight=1)
+        
+        self.threads_list = threads_list
 
         self.get_date = datetime.now().strftime('%Y/%m/%d %H:%M')
         self.hw_outframes = []
@@ -17,13 +19,19 @@ class Homeworks(ct.CTkScrollableFrame):
     def make_ui(self):
         th = threading.Thread(target=self.__make_ui)
         th.setDaemon(True)
+        self.threads_list.append(th)
         th.start()
 
     def __make_ui(self):
+        bar = ct.CTkProgressBar(self, mode='indetermine', width=self.winfo_width())
+        bar.grid(row=0, sticky="nsew")
+        bar.start()
         try:
             homeworks = get_homeworks()
         except:
             print('get homework error')
+        bar.stop()
+        bar.destroy()
         if not len(homeworks):
             outframe = ct.CTkFrame(self, width=self.winfo_width())
             ct.CTkLabel(outframe, text='現在，課題はありません．', width=outframe.winfo_width()).grid(row=0, column=0, sticky="nsew")

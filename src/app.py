@@ -2,14 +2,16 @@ import customtkinter as ct
 import os
 from PIL import Image
 import threading
+import unicodedata
 
 from login.login_window import LoginWindow
 from top.top import Top
 from courses.courses import Courses
+from config.config import Config
 
 from utils import isexists_login_info
-from api import get_courses, check_auth
-from const import ASSET_DIR
+from api import check_auth
+from const import ASSET_DIR, CACHE_DIR
 
 class App(ct.CTk):
     def __init__(self):
@@ -20,6 +22,7 @@ class App(ct.CTk):
         self.title('CLE-desktop')
         self.geometry(f'{1400}x{800}+150+50')
         self.focus()
+        self.protocol("WM_DELETE_WINDOW", self.close_window)
 
         # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
@@ -36,31 +39,55 @@ class App(ct.CTk):
                                             text='',
                                             fg_color="transparent",
                                             hover=False,
-                                            command=self.click_logo).grid(row=0, column=0, padx=20, pady=20)
+                                            command=lambda: self.change_content('top'))
+        self.logo.grid(row=0, column=0, padx=20, pady=20)
+        self.home_button = ct.CTkButton(self.navigation_frame,
+                                        corner_radius=0, height=40, border_spacing=10,
+                                        text='ホーム', fg_color="transparent", text_color=("gray10", "gray90"),
+                                        hover_color=("gray70", "gray30"),
+                                        anchor="w",
+                                        command=lambda: self.change_content('top'))
+        self.home_button.grid(row=1, column=0, padx=20, pady=20)
         self.course_button = ct.CTkButton(self.navigation_frame,
-                                                     corner_radius=0, height=40, border_spacing=10,
-                                                     text='コース', fg_color="transparent", text_color=("gray10", "gray90"),
-                                                     hover_color=("gray70", "gray30"),
-                                                     anchor="w",
-                                                     command=self.click_course_button).grid(row=1, column=0, padx=20, pady=20)
+                                          corner_radius=0, height=40, border_spacing=10,
+                                          text='コース', fg_color="transparent", text_color=("gray10", "gray90"),
+                                          hover_color=("gray70", "gray30"),
+                                          anchor="w",
+                                          command=lambda: self.change_content('courses'))
+        self.course_button.grid(row=2, column=0, padx=20, pady=20)
+        self.config_button = ct.CTkButton(self.navigation_frame,
+                                          corner_radius=0, height=40, border_spacing=10,
+                                          text='設定', fg_color="transparent", text_color=("gray10", "gray90"),
+                                          hover_color=("gray70", "gray30"),
+                                          anchor="w",
+                                          command=lambda: self.change_content('config'))
+        self.config_button.grid(row=3, column=0, padx=20, pady=20)
 
         self.current = None
-        self.change_content('Top')
+        self.change_content('top')
 
     def change_content(self, to):
-        # if self.current != None:
-        #     self.current.destroy()
-        if to == 'Top':
+        if self.current != None:
+            th = threading.Thread(target=self.current.destroy_this)
+            th.setDaemon(True)
+            th.start()
+        if to == 'top':
             top = Top(self, fg_color='transparent')
             top.tkraise()
             top.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
             self.current = top
             return
-        if to == 'Courses':
-            courses = Courses(self)
+        if to == 'courses':
+            courses = Courses(self, corner_radius=10)
             courses.tkraise()
             courses.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
             self.current = courses
+            return
+        if to == 'config':
+            config = Config(self, fg_color='transparent')
+            config.tkraise()
+            config.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+            self.current = config
             return
 
     def login(self):
@@ -70,13 +97,10 @@ class App(ct.CTk):
         self.login_window = LoginWindow(self)
         self.login_window.mainloop()
 
-    def click_logo(self):
-        print('logo')
-        self.change_content('Top')
-
-    def click_course_button(self):
-        print('course')
-        self.change_content('Courses')
+    def close_window(self):
+        # if os.path.exists(os.path.join(CACHE_DIR, 'courses.pkl')):
+        #     os.remove(os.path.join(CACHE_DIR, 'courses.pkl'))
+        exit()
 
 
 if __name__ == '__main__':

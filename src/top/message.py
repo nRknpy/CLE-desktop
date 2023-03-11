@@ -6,8 +6,9 @@ import threading
 from api import get_message
 
 class MassageFrame(ct.CTkFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, threads_list, **kwargs):
         super().__init__(master, **kwargs)
+        self.threads_list = threads_list
         self.grid_columnconfigure(0, weight=1)
         self.message = htmlwidgets.HtmlFrame(self)
         self.message.on_link_click(self.load_link)

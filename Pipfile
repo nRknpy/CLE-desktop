@@ -13,6 +13,7 @@ asyncio = "*"
 pyppeteer = "*"
 asynctkinter = "*"
 tkinterweb = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 

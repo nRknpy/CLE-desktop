@@ -81,6 +81,7 @@ class LoginWindow(ct.CTkToplevel):
         os.makedirs(CACHE_DIR, exist_ok=True)
         pickle.dump(driver.get_cookies(), open(COOKIES_PATH, 'wb'))
         driver.quit()
+        self.message.configure(text='ユーザー情報取得中...', text_color=('black', 'white'))
         user_id = get_userinfo()['id']
         self.message.configure(text='ユーザー情報保存中...', text_color=('black', 'white'))
         pickle.dump(user_id, open(os.path.join(CACHE_DIR, 'user-id.pkl'), 'wb'))
