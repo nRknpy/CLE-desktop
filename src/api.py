@@ -1,3 +1,4 @@
+import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -17,13 +18,18 @@ def selenium_client():
     if not os.path.exists(COOKIES_PATH):
         raise RuntimeError('NonCookiesError')
 
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-logging')
-    options.add_argument('--log-level=3')
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    options.add_experimental_option('detach', True)
-    driver = webdriver.Chrome(options=options)
+    # options = webdriver.ChromeOptions()
+    # options.add_argument('--disable-logging')
+    # options.add_argument('--log-level=3')
+    # options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    # options.add_experimental_option('detach', True)
+    # driver = webdriver.Chrome(options=options)
+    options = uc.ChromeOptions()
+    options.add_argument('--headless=new')
+    prefs = {"credentials_enable_service": False,
+             "profile.password_manager_enabled" : False}
+    options.add_experimental_option("prefs", prefs)
+    driver = uc.Chrome(service_creationflags=CREATE_NO_WINDOW, options=options)
     cookies = pickle.load(open(COOKIES_PATH, 'rb'))
     driver.get('https://www.cle.osaka-u.ac.jp')
     for cookie in cookies:
@@ -117,11 +123,12 @@ def get_content_html(course_id):
         return True, f'<h4><a href=\"https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}">https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}</a><h4><br><p>現在，このページの表示は実装されていません．リンクから直接確認してください．</p>'
 
 def login_save(userid, password, totp_or_token, input_token=False):
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    service = Service()
-    service.creation_flags = CREATE_NO_WINDOW
-    driver = webdriver.Chrome(options=options, service=service)
+    options = uc.ChromeOptions()
+    options.add_argument('--headless=new')
+    prefs = {"credentials_enable_service": False,
+             "profile.password_manager_enabled" : False}
+    options.add_experimental_option("prefs", prefs)
+    driver = uc.Chrome(service_creationflags=CREATE_NO_WINDOW, options=options)
     driver.get("https://www.cle.osaka-u.ac.jp/")
     driver.find_element(By.XPATH, "//*[@id=\"loginsaml\"]").click()
     if (len(driver.find_elements(By.XPATH, "//*[@id=\"USER_ID\"]"))):

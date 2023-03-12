@@ -38,11 +38,11 @@ class App(ct.CTk):
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
         self.navigation_frame.grid_rowconfigure(4, weight=1)
         self.logo = ct.CTkButton(self.navigation_frame,
-                                            image=self.logo_image,
-                                            text='',
-                                            fg_color="transparent",
-                                            hover=False,
-                                            command=lambda: self.change_content('top'))
+                                 image=self.logo_image,
+                                 text='',
+                                 fg_color="transparent",
+                                 hover=False,
+                                 command=lambda: self.change_content('top'))
         self.logo.grid(row=0, column=0, padx=20, pady=20)
         self.home_button = ct.CTkButton(self.navigation_frame,
                                         corner_radius=0, height=40, border_spacing=10,
@@ -120,6 +120,7 @@ if __name__ == '__main__':
         config = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
         if config['darkmode']: ct.set_appearance_mode('dark')
         else: ct.set_appearance_mode('light')
-    else: ct.set_appearance_mode("light")
+    else: ct.set_appearance_mode("system")
     app = App()
+    app.iconbitmap(bitmap=os.path.join(ASSET_DIR, 'icon.ico'))
     app.mainloop()

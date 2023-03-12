@@ -1,5 +1,6 @@
 import customtkinter as ct
 import tkinter as tk
+import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -15,6 +16,8 @@ from api import get_userinfo
 class LoginWindow(ct.CTkToplevel):
     def __init__(self, *args, userid=None, password=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.threads = []
+        self.driver = None
         self.geometry("400x400")
         self.resizable(False, False)
         self.title('Login')
@@ -53,43 +56,42 @@ class LoginWindow(ct.CTkToplevel):
         res = [None]
         thread = threading.Thread(target=self.login_process, args=(username, password, totp, res))
         thread.setDaemon(True)
+        self.threads.append(thread)
         thread.start()
         self.after_process(res)
 
     def login_process(self, username, password, totp, res):
         self.message.configure(text='ログイン処理中...', text_color=('black', 'white'))
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--disable-logging')
-        options.add_argument('--log-level=3')
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        service = Service()
-        service.creation_flags = CREATE_NO_WINDOW
-        driver = webdriver.Chrome(options=options, service=service)
-        driver.get("https://www.cle.osaka-u.ac.jp/")
-        driver.find_element(By.XPATH, "//*[@id=\"loginsaml\"]").click()
-        if (len(driver.find_elements(By.XPATH, "//*[@id=\"USER_ID\"]"))):
-            driver.find_element(By.XPATH, "//*[@id=\"USER_ID\"]").send_keys(username)
-            driver.find_element(By.XPATH, "//*[@id=\"USER_PASSWORD\"]").send_keys(password)
-            driver.find_element(By.XPATH, "/html/body/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr/td[2]/div/input").click()
-        if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
+        options = uc.ChromeOptions()
+        options.add_argument('--headless=new')
+        prefs = {"credentials_enable_service": False,
+                 "profile.password_manager_enabled" : False}
+        options.add_experimental_option("prefs", prefs)
+        self.driver = uc.Chrome(service_creationflags=CREATE_NO_WINDOW, options=options)
+        self.driver.get("https://www.cle.osaka-u.ac.jp/")
+        self.driver.find_element(By.XPATH, "//*[@id=\"loginsaml\"]").click()
+        if (len(self.driver.find_elements(By.XPATH, "//*[@id=\"USER_ID\"]"))):
+            self.driver.find_element(By.XPATH, "//*[@id=\"USER_ID\"]").send_keys(username)
+            self.driver.find_element(By.XPATH, "//*[@id=\"USER_PASSWORD\"]").send_keys(password)
+            self.driver.find_element(By.XPATH, "/html/body/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr/td[2]/div/input").click()
+        if (len(self.driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
             res[0] = 'info-error'
-            driver.quit()
+            self.driver.quit()
             return
-        if (len(driver.find_elements(By.XPATH, "//*[@id=\"OTP_CODE\"]"))):
-            driver.find_element(By.XPATH, "//*[@id=\"OTP_CODE\"]").send_keys(totp)
-            driver.find_element(By.XPATH, "//*[@id=\"STORE_OTP_AUTH_RESULT\"]").click()
-            driver.find_element(By.XPATH, "/html/body/form/table/tbody/tr[3]/td/table/tbody/tr[7]/td/div/button").click()
-        if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
+        if (len(self.driver.find_elements(By.XPATH, "//*[@id=\"OTP_CODE\"]"))):
+            self.driver.find_element(By.XPATH, "//*[@id=\"OTP_CODE\"]").send_keys(totp)
+            self.driver.find_element(By.XPATH, "//*[@id=\"STORE_OTP_AUTH_RESULT\"]").click()
+            self.driver.find_element(By.XPATH, "/html/body/form/table/tbody/tr[3]/td/table/tbody/tr[7]/td/div/button").click()
+        if (len(self.driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
             res[0] = 'totp-error'
-            driver.quit()
+            self.driver.quit()
             return
-        if (len(driver.find_elements(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input"))):
-            driver.find_element(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input").click()
-            driver.find_element(By.XPATH, "//*[@id=\"ok\"]").click()
+        if (len(self.driver.find_elements(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input"))):
+            self.driver.find_element(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input").click()
+            self.driver.find_element(By.XPATH, "//*[@id=\"ok\"]").click()
         os.makedirs(CACHE_DIR, exist_ok=True)
-        pickle.dump(driver.get_cookies(), open(COOKIES_PATH, 'wb'))
-        driver.quit()
+        pickle.dump(self.driver.get_cookies(), open(COOKIES_PATH, 'wb'))
+        self.driver.quit()
         self.message.configure(text='ユーザー情報取得中...', text_color=('black', 'white'))
         user_id = get_userinfo()['id']
         self.message.configure(text='ユーザー情報保存中...', text_color=('black', 'white'))
@@ -114,5 +116,11 @@ class LoginWindow(ct.CTkToplevel):
         self.after(10, self.after_process, res)
 
     def close_window(self):
+        if self.driver != None:
+            self.driver.quit()
+        self.quit()
         self.destroy()
-        exit()
+        if len(self.threads):
+            for th in self.threads:
+                th.join()
+        os._exit(0)
