@@ -3,6 +3,7 @@ import tkinter as tk
 import threading
 import pickle
 import os
+import sys
 import webbrowser
 
 from const import CACHE_DIR
@@ -21,6 +22,19 @@ class Config(ct.CTkScrollableFrame):
         self.darkmode_switch = ct.CTkSwitch(self.darkmode_frame, width=500, text='')
         self.darkmode_switch.grid(row=0, column=1, pady=15)
         self.darkmode_frame.grid(row=0, padx=1, pady=(0, 6), sticky="nsew")
+        
+        self.theme_frame = ct.CTkFrame(self, corner_radius=10)
+        self.theme_frame.grid_columnconfigure(1, weight=1)
+        self.theme_label = ct.CTkLabel(self.theme_frame, text='カラーテーマ:', width=400, anchor='e')
+        self.theme_label.grid(row=0, column=0, pady=15)
+        self.theme_segbutton = ct.CTkSegmentedButton(self.theme_frame, width=500,
+                                                     values=['blue', 'dark-blue', 'green'],
+                                                     variable=ct.StringVar(value='blue'))
+        self.theme_segbutton.grid(row=0, column=1, padx=40, pady=15, sticky='ew')
+        self.theme_tips = ct.CTkLabel(self.theme_frame, width=500,
+                                      text='テーマを変更するには，適用後にアプリの再起動が必要です')
+        self.theme_tips.grid(row=1, column=1, padx=40, pady=15, sticky='ew')
+        self.theme_frame.grid(row=1, padx=1, pady=(0, 6), sticky="nsew")
         
         self.userinfo_frame = ct.CTkFrame(self, corner_radius=10)
         self.userinfo_frame.grid_columnconfigure(1, weight=1)
@@ -50,19 +64,22 @@ class Config(ct.CTkScrollableFrame):
         self.mfa_regist_button = ct.CTkButton(self.rightframe, text='MFA再登録', command=lambda: webbrowser.open('https://auth-mfa.auth.osaka-u.ac.jp/AttributeRegistSite/MfaInfoServlet'))
         self.mfa_regist_button.grid(row=5, column=1, padx=5, sticky='e')
         self.rightframe.grid(row=0, column=1, pady=15)
-        self.userinfo_frame.grid(row=1, padx=1, pady=(0, 6), sticky="nsew")
+        self.userinfo_frame.grid(row=2, padx=1, pady=(0, 6), sticky="nsew")
         
         self.buttons_frame = ct.CTkFrame(self, fg_color='transparent')
         self.default_button = ct.CTkButton(self.buttons_frame, text='リセット', width=80, command=self.set_default)
-        self.default_button.grid(row=2, column=0, padx=10, sticky='e')
+        self.default_button.grid(row=2, column=1, padx=10, sticky='e')
         self.apply_button = ct.CTkButton(self.buttons_frame, text='適用', width=80, command=self.apply_config)
-        self.apply_button.grid(row=2, column=1, padx=10, sticky='e')
-        self.buttons_frame.grid(row=2, padx=10, sticky='e')
+        self.apply_button.grid(row=2, column=2, padx=10, sticky='e')
+        self.buttons_frame.grid(row=3, padx=10, sticky='e')
         
         if os.path.exists(os.path.join(CACHE_DIR, 'config.pkl')):
             nowconfig = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
             if nowconfig['darkmode']: self.darkmode_switch.select()
             else: self.darkmode_switch.deselect()
+            
+            self.theme_segbutton.set(nowconfig['theme'])
+            
             if nowconfig['userid']:
                 self.userid_entry.delete(0, tk.END)
                 self.userid_entry.insert(tk.END, nowconfig['userid'])
@@ -76,6 +93,7 @@ class Config(ct.CTkScrollableFrame):
     def get_config(self):
         return dict(
             darkmode = self.darkmode_switch.get(),
+            theme = self.theme_segbutton.get(),
             userid = None if not self.userid_entry.get() else self.userid_entry.get(),
             password = None if not self.password_entry.get() else self.password_entry.get(),
             token = None if not self.token_entry.get() else self.token_entry.get()
@@ -90,9 +108,12 @@ class Config(ct.CTkScrollableFrame):
             if nowconfig == newconfig:
                 self.apply_button.configure(state='normal', text='適用')
                 return
-            if (nowconfig['userid'], nowconfig['password'], nowconfig['token']) == (newconfig['userid'], newconfig['password'], newconfig['token']) and nowconfig['darkmode'] != newconfig['darkmode']:
+            if (nowconfig['userid'], nowconfig['password'], nowconfig['token']) == (newconfig['userid'], newconfig['password'], newconfig['token']):
+                if nowconfig['darkmode'] != newconfig['darkmode']:
+                    ct.set_appearance_mode('dark' if newconfig['darkmode'] else 'light')
+                if nowconfig['theme'] != newconfig['theme']:
+                    ct.set_default_color_theme(newconfig['theme'])
                 self.apply_button.configure(state='normal', text='適用')
-                ct.set_appearance_mode('dark' if newconfig['darkmode'] else 'light')
                 self.error_label.configure(text='')
                 pickle.dump(newconfig, open(os.path.join(CACHE_DIR, 'config.pkl'), 'wb'))
                 return
@@ -143,6 +164,7 @@ class Config(ct.CTkScrollableFrame):
     
     def set_default(self):
         self.darkmode_switch.deselect()
+        self.theme_segbutton.set('blue')
         self.userid_entry.delete(0, tk.END)
         self.password_entry.delete(0, tk.END)
         self.token_entry.delete(0, tk.END)

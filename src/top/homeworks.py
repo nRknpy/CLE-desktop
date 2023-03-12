@@ -23,16 +23,14 @@ class Homeworks(ct.CTkScrollableFrame):
         th.start()
 
     def __make_ui(self):
-        bar = ct.CTkProgressBar(self, mode='indetermine', width=self.winfo_width())
-        bar.grid(row=0, sticky="nsew")
-        bar.start()
+        self.start_waitbar()
         try:
             homeworks = get_homeworks()
         except:
             print('get homework error')
             raise RuntimeError('GetHomeworksError')
-        bar.stop()
-        bar.destroy()
+        self.bar.stop()
+        self.bar.destroy()
         if not len(homeworks):
             self.no_homeworks()
             return
@@ -71,3 +69,8 @@ class Homeworks(ct.CTkScrollableFrame):
         ct.CTkLabel(outframe, text='現在，課題はありません．', width=outframe.winfo_width()).grid(row=0, column=0, sticky="nsew")
         outframe.grid(row=0, sticky="nsew")
         self.hw_outframes.append(outframe)
+    
+    def start_waitbar(self):
+        self.bar = ct.CTkProgressBar(self, mode='indetermine', width=self.winfo_width())
+        self.bar.grid(row=0, sticky="nsew")
+        self.bar.start()

@@ -118,8 +118,10 @@ if __name__ == '__main__':
         config = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
         if config['darkmode']: ct.set_appearance_mode('dark')
         else: ct.set_appearance_mode('light')
-    else: ct.set_appearance_mode("system")
-    ct.set_default_color_theme("blue")
+        ct.set_default_color_theme(config['theme'])
+    else:
+        ct.set_appearance_mode("system")
+        ct.set_default_color_theme("blue")
     app = App()
     app.iconbitmap(bitmap=os.path.join(ASSET_DIR, 'icon.ico'))
     app.mainloop()
