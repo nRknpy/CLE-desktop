@@ -30,13 +30,11 @@ class Homeworks(ct.CTkScrollableFrame):
             homeworks = get_homeworks()
         except:
             print('get homework error')
+            raise RuntimeError('GetHomeworksError')
         bar.stop()
         bar.destroy()
         if not len(homeworks):
-            outframe = ct.CTkFrame(self, width=self.winfo_width())
-            ct.CTkLabel(outframe, text='現在，課題はありません．', width=outframe.winfo_width()).grid(row=0, column=0, sticky="nsew")
-            outframe.grid(row=0, sticky="nsew")
-            self.hw_outframes.append(outframe)
+            self.no_homeworks()
             return
         for homework in homeworks:
             self.add_item(homework['title'], homework['calendarNameLocalizable']['rawValue'], homework['endDate'],
@@ -67,3 +65,9 @@ class Homeworks(ct.CTkScrollableFrame):
         button.grid(row=0, column=2, pady=(5, 5), padx=5)
         hw_outframe.grid(row=len(self.hw_outframes), padx=1, pady=(0, 3), sticky="nsew")
         self.hw_outframes.append(hw_outframe)
+
+    def no_homeworks(self):
+        outframe = ct.CTkFrame(self, width=self.winfo_width())
+        ct.CTkLabel(outframe, text='現在，課題はありません．', width=outframe.winfo_width()).grid(row=0, column=0, sticky="nsew")
+        outframe.grid(row=0, sticky="nsew")
+        self.hw_outframes.append(outframe)

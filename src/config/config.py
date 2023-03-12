@@ -142,7 +142,6 @@ class Config(ct.CTkScrollableFrame):
         return
     
     def set_default(self):
-        print('set default')
         self.darkmode_switch.deselect()
         self.userid_entry.delete(0, tk.END)
         self.password_entry.delete(0, tk.END)

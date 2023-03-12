@@ -25,7 +25,6 @@ class App(ct.CTk):
         self.focus()
         self.protocol("WM_DELETE_WINDOW", self.close_window)
 
-        # set grid layout 1x2
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
@@ -33,7 +32,6 @@ class App(ct.CTk):
                                       dark_image=Image.open(os.path.join(ASSET_DIR, 'CLELogo_dark.png')),
                                       size=(220, 32))
 
-        # navigation frame
         self.navigation_frame = ct.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
         self.navigation_frame.grid_rowconfigure(4, weight=1)
@@ -121,6 +119,7 @@ if __name__ == '__main__':
         if config['darkmode']: ct.set_appearance_mode('dark')
         else: ct.set_appearance_mode('light')
     else: ct.set_appearance_mode("system")
+    ct.set_default_color_theme("blue")
     app = App()
     app.iconbitmap(bitmap=os.path.join(ASSET_DIR, 'icon.ico'))
     app.mainloop()
