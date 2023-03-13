@@ -36,8 +36,10 @@ pipenv run app
 
 ## ビルド
 
+- `build.spec.sample`を書き換えて`build.spec`を作成
+
 ```
 pipenv run build
 ```
 
-`dist`ディレクトリに`cle-desktop.exe`が作成されます
+- `dist`ディレクトリに`cle-desktop.exe`が作成されます
