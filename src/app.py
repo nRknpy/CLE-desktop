@@ -9,10 +9,12 @@ from login.login_window import LoginWindow
 from top.top import Top
 from courses.courses import Courses
 from config.config import Config
+from mfacode.mfacode import MFACode
 
 from utils import isexists_login_info
 from api import check_auth, login_save
-from const import ASSET_DIR, CACHE_DIR
+from const import ASSET_DIR, CACHE_DIR, CONFIG_PATH
+
 
 class App(ct.CTk):
     def __init__(self):
@@ -29,12 +31,13 @@ class App(ct.CTk):
         self.grid_columnconfigure(1, weight=1)
 
         self.logo_image = ct.CTkImage(light_image=Image.open(os.path.join(ASSET_DIR, 'CLELogo_light.png')),
-                                      dark_image=Image.open(os.path.join(ASSET_DIR, 'CLELogo_dark.png')),
+                                      dark_image=Image.open(os.path.join(
+                                          ASSET_DIR, 'CLELogo_dark.png')),
                                       size=(220, 32))
 
         self.navigation_frame = ct.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.grid_rowconfigure(4, weight=1)
+        self.navigation_frame.grid_rowconfigure(5, weight=1)
         self.logo = ct.CTkButton(self.navigation_frame,
                                  image=self.logo_image,
                                  text='',
@@ -58,11 +61,18 @@ class App(ct.CTk):
         self.course_button.grid(row=2, column=0, padx=20, pady=20)
         self.config_button = ct.CTkButton(self.navigation_frame,
                                           corner_radius=0, height=40, border_spacing=10,
+                                          text='MFA認証コード', fg_color="transparent", text_color=("gray10", "gray90"),
+                                          hover_color=("gray70", "gray30"),
+                                          anchor="w",
+                                          command=lambda: self.change_content('mfacode'))
+        self.config_button.grid(row=3, column=0, padx=20, pady=20)
+        self.config_button = ct.CTkButton(self.navigation_frame,
+                                          corner_radius=0, height=40, border_spacing=10,
                                           text='設定', fg_color="transparent", text_color=("gray10", "gray90"),
                                           hover_color=("gray70", "gray30"),
                                           anchor="w",
                                           command=lambda: self.change_content('config'))
-        self.config_button.grid(row=3, column=0, padx=20, pady=20)
+        self.config_button.grid(row=4, column=0, padx=20, pady=20)
 
         self.current = None
         self.change_content('top')
@@ -90,19 +100,28 @@ class App(ct.CTk):
             config.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
             self.current = config
             return
+        if to == 'mfacode':
+            mfacode = MFACode(
+                self, change_content_fnc=self.change_content, fg_color='transparent')
+            mfacode.tkraise()
+            mfacode.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+            self.current = mfacode
+            return
 
     def login(self):
         if isexists_login_info():
             if check_auth():
                 return
-        if os.path.exists(os.path.join(CACHE_DIR, 'config.pkl')):
-            config = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
+        if os.path.exists(CONFIG_PATH):
+            config = pickle.load(open(CONFIG_PATH, 'rb'))
             if config['userid'] and config['password'] and not config['token']:
-                self.login_window = LoginWindow(self, userid=config['userid'], password=config['password'])
+                self.login_window = LoginWindow(
+                    self, userid=config['userid'], password=config['password'])
                 self.login_window.mainloop()
                 return
             if config['userid'] and config['password'] and config['token']:
-                login_save(config['userid'], config['password'], config['token'], input_token=True)
+                login_save(config['userid'], config['password'],
+                           config['token'], input_token=True)
                 return
         self.login_window = LoginWindow(self)
         self.login_window.mainloop()
@@ -114,10 +133,12 @@ class App(ct.CTk):
 
 
 if __name__ == '__main__':
-    if os.path.exists(os.path.join(CACHE_DIR, 'config.pkl')):
-        config = pickle.load(open(os.path.join(CACHE_DIR, 'config.pkl'), 'rb'))
-        if config['darkmode']: ct.set_appearance_mode('dark')
-        else: ct.set_appearance_mode('light')
+    if os.path.exists(CONFIG_PATH):
+        config = pickle.load(open(CONFIG_PATH, 'rb'))
+        if config['darkmode']:
+            ct.set_appearance_mode('dark')
+        else:
+            ct.set_appearance_mode('light')
         ct.set_default_color_theme(config['theme'])
     else:
         ct.set_appearance_mode("system")

@@ -15,8 +15,10 @@ tkinterweb = "*"
 beautifulsoup4 = "*"
 pyinstaller = "*"
 undetected-chromedriver = {git = "https://github.com/sebdelsol/undetected-chromedriver.git"}
+pyperclip = "*"
 
 [dev-packages]
+autopep8 = "*"
 
 [requires]
 python_version = "3.10"
