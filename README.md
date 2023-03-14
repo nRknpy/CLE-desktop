@@ -1,5 +1,7 @@
 # CLE-desktop
 
+[![GitHub release](https://img.shields.io/github/v/release/nRknpy/CLE-desktop?label=Release)](https://github.com/nRknpy/CLE-desktop/releases/latest)
+
 大阪大学　授業支援システム(CLE)のデスクトップアプリ
 
 ## 機能(v0.1.0)
