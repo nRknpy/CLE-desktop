@@ -3,11 +3,11 @@ import pyotp
 import os
 import pickle
 import pyperclip
-from datetime import datetime
 import threading
 import time
 
 from const import CONFIG_PATH
+from utils import now_second
 
 
 class MFACode(ct.CTkFrame):
@@ -58,7 +58,7 @@ class MFACode(ct.CTkFrame):
 
     def update_code(self):
         self.totpcode = self.totp.now()
-        s = datetime.now().second
+        s = now_second()
         bar_value = (30 - (s % 30)) / 30
         self.timebar.set(bar_value)
         self.code.configure(text=self.totpcode)
