@@ -14,6 +14,8 @@ from utils import isexists_login_info
 from api import check_auth, login_save
 from const import ASSET_DIR, CACHE_DIR, CONFIG_PATH
 
+import _global as g
+
 
 class App(ct.CTk):
     def __init__(self):
@@ -132,6 +134,7 @@ class App(ct.CTk):
 
 
 if __name__ == '__main__':
+    g.browser_loginable = False
     if os.path.exists(CONFIG_PATH):
         config = pickle.load(open(CONFIG_PATH, 'rb'))
         if config['darkmode']:

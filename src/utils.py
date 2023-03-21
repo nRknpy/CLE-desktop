@@ -3,8 +3,11 @@ import unicodedata
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
+import webbrowser
 
 from const import COOKIES_PATH, CACHE_DIR
+
+import _global as g
 
 
 def isexists_login_info():
@@ -26,3 +29,10 @@ def now_second():
     s = dt.second
     ms = dt.microsecond * 1e-6
     return s + ms
+
+
+def webbrowser_open(url):
+    if not g.browser_loginable:
+        webbrowser.open('https://www.cle.osaka-u.ac.jp')
+        g.browser_loginable = True
+    webbrowser.open(url)

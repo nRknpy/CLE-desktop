@@ -3,7 +3,9 @@ from tkinterweb import htmlwidgets
 import webbrowser
 import threading
 
-from api import get_content_html
+from api import get_content_html, selenium_client
+from utils import webbrowser_open
+
 
 class CourseContent(ct.CTkFrame):
     def __init__(self, master, threads_list, **kwargs):
@@ -16,17 +18,30 @@ class CourseContent(ct.CTkFrame):
     def make_ui(self, course_id, latest_id):
         if self.content != None:
             self.content.destroy()
-        self.bar = ct.CTkProgressBar(self, mode='indetermine', width=self.winfo_width())
+        self.bar = ct.CTkProgressBar(
+            self, mode='indetermine', width=self.winfo_width())
         self.bar.grid(row=0, sticky="new")
         self.bar.start()
         flag, res = get_content_html(course_id)
         self.bar.stop()
         self.bar.destroy()
-        if latest_id[0] != course_id: return
-        self.content = htmlwidgets.HtmlFrame(self, height=self.winfo_height(), width=self.winfo_width(), messages_enabled = False)
+        if latest_id[0] != course_id:
+            return
+        self.content = htmlwidgets.HtmlFrame(self, height=self.winfo_height(
+        ), width=self.winfo_width(), messages_enabled=False)
         self.content.on_link_click(self.load_link)
         self.content.load_html(res)
         self.content.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
 
     def load_link(self, url):
         webbrowser.open(url)
+        # webbrowser_open(url)
+        # th = threading.Thread(target=lambda: self._load_link(url))
+        # th.setDaemon(True)
+        # self.threads_list.append(th)
+        # th.start()
+
+    def _load_link(self, url):
+        driver = selenium_client(headless=False)
+        driver.get(url)
+        driver.service.stop()

@@ -14,7 +14,8 @@ import copy
 
 from const import CACHE_DIR, COOKIES_PATH
 
-def selenium_client():
+
+def selenium_client(headless=True):
     if not os.path.exists(COOKIES_PATH):
         raise RuntimeError('NonCookiesError')
 
@@ -25,9 +26,10 @@ def selenium_client():
     # options.add_experimental_option('detach', True)
     # driver = webdriver.Chrome(options=options)
     options = uc.ChromeOptions()
-    options.add_argument('--headless=new')
+    if headless:
+        options.add_argument('--headless=new')
     prefs = {"credentials_enable_service": False,
-             "profile.password_manager_enabled" : False}
+             "profile.password_manager_enabled": False}
     options.add_experimental_option("prefs", prefs)
     driver = uc.Chrome(service_creationflags=CREATE_NO_WINDOW, options=options)
     cookies = pickle.load(open(COOKIES_PATH, 'rb'))
@@ -35,6 +37,7 @@ def selenium_client():
     for cookie in cookies:
         driver.add_cookie(cookie)
     return driver
+
 
 def requests_client():
     if not os.path.exists(COOKIES_PATH):
@@ -46,9 +49,11 @@ def requests_client():
         session.cookies.set(cookie["name"], cookie["value"])
     return session
 
+
 def check_auth():
     session = requests_client()
-    res = session.get('https://www.cle.osaka-u.ac.jp/learn/api/v1/users/me?expand=systemRoles,insRoles')
+    res = session.get(
+        'https://www.cle.osaka-u.ac.jp/learn/api/v1/users/me?expand=systemRoles,insRoles')
     if res.status_code == 401:
         return False
     elif res.status_code != 200:
@@ -56,10 +61,13 @@ def check_auth():
     else:
         return True
 
+
 def get_userinfo():
     session = requests_client()
-    res = session.get('https://www.cle.osaka-u.ac.jp/learn/api/v1/users/me?expand=systemRoles,insRoles').json()
+    res = session.get(
+        'https://www.cle.osaka-u.ac.jp/learn/api/v1/users/me?expand=systemRoles,insRoles').json()
     return res
+
 
 def get_homeworks():
     session = requests_client()
@@ -72,38 +80,46 @@ def get_homeworks():
         'limit': 50,
         'offset': 0,
     }, safe=':')
-    homeworks = session.get('https://www.cle.osaka-u.ac.jp/learn/api/v1/calendars/dueDateCalendarItems?' + query).json()
+    homeworks = session.get(
+        'https://www.cle.osaka-u.ac.jp/learn/api/v1/calendars/dueDateCalendarItems?' + query).json()
     if homeworks['results']:
         output = homeworks['results']
     else:
         output = []
     return output
 
+
 def get_message():
     session = requests_client()
-    res = session.get('https://www.cle.osaka-u.ac.jp/institution/api/module/d47c98c8-6c12-4460-b0f4-a31060843995/resources').json()
+    res = session.get(
+        'https://www.cle.osaka-u.ac.jp/institution/api/module/d47c98c8-6c12-4460-b0f4-a31060843995/resources').json()
     return res['return_body'][0]['details']['bbml']
+
 
 def get_courses():
     user_id = pickle.load(open(os.path.join(CACHE_DIR, 'user-id.pkl'), 'rb'))
     session = requests_client()
-    courses = session.get(f'https://www.cle.osaka-u.ac.jp//learn/api/v1/users/{user_id}/memberships').json()['results']
+    courses = session.get(
+        f'https://www.cle.osaka-u.ac.jp//learn/api/v1/users/{user_id}/memberships').json()['results']
     course_info_list = []
     for course in courses:
         course_id = course['courseId']
-        course_info = session.get(f'https://www.cle.osaka-u.ac.jp/learn/api/v1/courses/{course_id}').json()
+        course_info = session.get(
+            f'https://www.cle.osaka-u.ac.jp/learn/api/v1/courses/{course_id}').json()
         course_info_list.append(course_info)
     return course_info_list
+
 
 def get_content_html(course_id):
     # driver = copy.deepcopy(base_driver)
     driver = selenium_client()
-    driver.get(f'https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}')
+    driver.get(
+        f'https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}')
     html = driver.page_source
     driver.quit()
     soup = BeautifulSoup(html, "html.parser")
     elem = soup.find(id='content_listContainer')
-    if(elem == None):
+    if (elem == None):
         if soup.find(id='pageBanner') != None:
             return True, f'<h4><a href=\"https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}">https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}</a><h4><br><p>現在，このページの表示は実装されていません．リンクから直接確認してください．</p>'
         return False, f'<h4><a href=\"https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}">https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}</a><h4><br><p>表示するコンテンツがありません</p>'
@@ -111,9 +127,11 @@ def get_content_html(course_id):
     try:
         ext_elems.extend(elem.find_all('script'))
         ext_elems.extend(elem.find_all(class_='item_icon'))
-        ext_elems.extend(elem.find_all(class_='cmimg editmode jsInit cmimg-hide'))
+        ext_elems.extend(elem.find_all(
+            class_='cmimg editmode jsInit cmimg-hide'))
         ext_elems.extend(elem.find_all(class_='reorder editmode hideme'))
-        for e in ext_elems: e.extract()
+        for e in ext_elems:
+            e.extract()
         elem.prettify()
         return False, (f'<h4><a href=\"https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}">https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}</a><h4>'
                        + str(elem)
@@ -122,19 +140,22 @@ def get_content_html(course_id):
     except:
         return True, f'<h4><a href=\"https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}">https://www.cle.osaka-u.ac.jp/webapps/blackboard/content/listContent.jsp?course_id={course_id}</a><h4><br><p>現在，このページの表示は実装されていません．リンクから直接確認してください．</p>'
 
+
 def login_save(userid, password, totp_or_token, input_token=False):
     options = uc.ChromeOptions()
     options.add_argument('--headless=new')
     prefs = {"credentials_enable_service": False,
-             "profile.password_manager_enabled" : False}
+             "profile.password_manager_enabled": False}
     options.add_experimental_option("prefs", prefs)
     driver = uc.Chrome(service_creationflags=CREATE_NO_WINDOW, options=options)
     driver.get("https://www.cle.osaka-u.ac.jp/")
     driver.find_element(By.XPATH, "//*[@id=\"loginsaml\"]").click()
     if (len(driver.find_elements(By.XPATH, "//*[@id=\"USER_ID\"]"))):
         driver.find_element(By.XPATH, "//*[@id=\"USER_ID\"]").send_keys(userid)
-        driver.find_element(By.XPATH, "//*[@id=\"USER_PASSWORD\"]").send_keys(password)
-        driver.find_element(By.XPATH, "/html/body/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr/td[2]/div/input").click()
+        driver.find_element(
+            By.XPATH, "//*[@id=\"USER_PASSWORD\"]").send_keys(password)
+        driver.find_element(
+            By.XPATH, "/html/body/table/tbody/tr[3]/td/table/tbody/tr[5]/td/table/tbody/tr/td[2]/div/input").click()
     if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
         driver.quit()
         return 'info-error'
@@ -143,13 +164,16 @@ def login_save(userid, password, totp_or_token, input_token=False):
         if input_token:
             totp = pyotp.TOTP(totp_or_token).now()
         driver.find_element(By.XPATH, "//*[@id=\"OTP_CODE\"]").send_keys(totp)
-        driver.find_element(By.XPATH, "//*[@id=\"STORE_OTP_AUTH_RESULT\"]").click()
-        driver.find_element(By.XPATH, "/html/body/form/table/tbody/tr[3]/td/table/tbody/tr[7]/td/div/button").click()
+        driver.find_element(
+            By.XPATH, "//*[@id=\"STORE_OTP_AUTH_RESULT\"]").click()
+        driver.find_element(
+            By.XPATH, "/html/body/form/table/tbody/tr[3]/td/table/tbody/tr[7]/td/div/button").click()
     if (len(driver.find_elements(By.XPATH, "/html/body/form/table/tbody/tr/td/div[2]/h1"))):
         driver.quit()
         return 'totp-error'
     if (len(driver.find_elements(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input"))):
-        driver.find_element(By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input").click()
+        driver.find_element(
+            By.XPATH, "/html/body/form/table[2]/tbody/tr[4]/td[1]/input").click()
         driver.find_element(By.XPATH, "//*[@id=\"ok\"]").click()
     os.makedirs(CACHE_DIR, exist_ok=True)
     pickle.dump(driver.get_cookies(), open(COOKIES_PATH, 'wb'))
