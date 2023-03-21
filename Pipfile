@@ -9,13 +9,12 @@ selenium = "*"
 pillow = "*"
 requests = "*"
 pyotp = "*"
-asyncio = "*"
-pyppeteer = "*"
 tkinterweb = "*"
 beautifulsoup4 = "*"
 pyinstaller = "*"
 undetected-chromedriver = {git = "https://github.com/sebdelsol/undetected-chromedriver.git"}
 pyperclip = "*"
+asyncio = "*"
 
 [dev-packages]
 autopep8 = "*"

@@ -3,7 +3,6 @@ import os
 from PIL import Image
 import threading
 import pickle
-import unicodedata
 
 from login.login_window import LoginWindow
 from top.top import Top
@@ -89,7 +88,7 @@ class App(ct.CTk):
             self.current = top
             return
         if to == 'courses':
-            courses = Courses(self, corner_radius=10)
+            courses = Courses(self, fg_color='transparent')
             courses.tkraise()
             courses.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
             self.current = courses

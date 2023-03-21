@@ -2,6 +2,7 @@ cache
 Pipfile
 memo
 dist
+sample_course.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
