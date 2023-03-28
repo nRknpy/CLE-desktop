@@ -70,6 +70,9 @@ class CourseTable(ct.CTkScrollableFrame):
             except json.JSONDecodeError:
                 print('JSONDecodeError', course)
                 continue
+            if not 'term' in course.keys():
+                print('no term key')
+                continue
             d[course['term']['name']].append({
                 'name': course['displayName'],
                 'teacher': description['lecturer'],
