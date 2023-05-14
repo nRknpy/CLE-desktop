@@ -173,12 +173,13 @@ class Config(ct.CTkScrollableFrame):
             if res == 'info-error':
                 self.error_label.configure(
                     text='個人IDまたはパスワードに誤りがあります', text_color='red')
+                self.apply_button.configure(state='normal', text='適用')
             if res == 'totp-error':
                 self.error_label.configure(
                     text='トークンに誤りがあります', text_color='red')
+                self.apply_button.configure(state='normal', text='適用')
             nowconfig['darkmode'] = newconfig['darkmode']
             pickle.dump(nowconfig, open(CONFIG_PATH, 'wb'))
-            self.apply_button.configure(state='normal', text='適用')
             return
         self.error_label.configure(
             text='『「大阪大学個人ID」と「パスワード」』，もしくは\n『「大阪大学個人ID」と「パスワード」と「トークン」』を入力してください', text_color='red')

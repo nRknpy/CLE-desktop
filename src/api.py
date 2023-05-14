@@ -98,15 +98,26 @@ def get_message():
 
 def get_courses():
     user_id = pickle.load(open(os.path.join(CACHE_DIR, 'user-id.pkl'), 'rb'))
+    if os.path.exists(os.path.join(CACHE_DIR, 'course-id2info.pkl')):
+        course_id2info = pickle.load(
+            open(os.path.join(CACHE_DIR, 'course-id2info.pkl'), 'rb'))
+    else:
+        course_id2info = {}
     session = requests_client()
     courses = session.get(
         f'https://www.cle.osaka-u.ac.jp//learn/api/v1/users/{user_id}/memberships').json()['results']
     course_info_list = []
     for course in courses:
         course_id = course['courseId']
-        course_info = session.get(
-            f'https://www.cle.osaka-u.ac.jp/learn/api/v1/courses/{course_id}').json()
+        if course_id in course_id2info:
+            course_info = course_id2info[course_id]
+        else:
+            course_info = session.get(
+                f'https://www.cle.osaka-u.ac.jp/learn/api/v1/courses/{course_id}').json()
+            course_id2info[course_id] = course_info
         course_info_list.append(course_info)
+    pickle.dump(course_id2info, open(
+        os.path.join(CACHE_DIR, 'course-id2info.pkl'), 'wb'))
     return course_info_list
 
 
